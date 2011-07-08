@@ -12,12 +12,14 @@ TARGET = stacktest
 CONFIG   += console
 CONFIG   -= app_bundle
 CONFIG += debug
+QMAKE_CXXFLAGS += -fomit-frame-pointer
 
 TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    stackcontext.cpp
+    stackcontext.cpp \
+    stackcontext_x86_64.s
 
 HEADERS += \
     stackcontext.h
