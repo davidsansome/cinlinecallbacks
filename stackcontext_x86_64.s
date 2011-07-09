@@ -71,7 +71,7 @@ _StackContext_Yield:
 
   # Save the registers and return address from the calling function
   mov (%rsp),%rcx          # rcx = this
-  mov 0x8(%rsp),%rbx       # rbx = stack_start
+  lea 0x20(%rsp),%rbx      # rbx = caller's rsp
   mov %rbx,0x30(%rcx)      # this->yielded_sp_ = stack_start
 
   mov %rbp,0x38(%rcx)      # this->yielded_bp_ = rbp
