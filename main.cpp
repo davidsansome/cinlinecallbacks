@@ -4,16 +4,15 @@
 
 #include <QtDebug>
 
+#include "deferred.h"
 #include "stackcontext.h"
-
-StackContext* sContext = NULL;
-
 
 void begin() {
   int var = 42;
 
   qDebug() << "begin before yield" << var;
-  sContext->Yield();
+  Deferred deferred;
+  deferred.Yield();
   qDebug() << "begin after yield" << var;
 }
 
@@ -22,9 +21,9 @@ void prebegin() {
 }
 
 int main(int, char**) {
-  sContext = new StackContext;
+  StackContext* context = StackContext::ThreadLocalInstance();
 
-  if (sContext->MarkEventLoop() == 0) {
+  if (context->MarkEventLoop() == 0) {
     qDebug() << "main before begin";
     prebegin();
     qDebug() << "main after begin";
@@ -33,7 +32,7 @@ int main(int, char**) {
     qDebug() << "main yielded";
   }
 
-  sContext->ResumeYield();
+  context->ResumeAll();
   qDebug() << "main after resume";
 
   return 0;

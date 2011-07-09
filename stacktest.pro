@@ -11,15 +11,17 @@ QT       -= gui
 TARGET = stacktest
 CONFIG   += console
 CONFIG   -= app_bundle
-CONFIG += debug
-QMAKE_CXXFLAGS += -O2
 
 TEMPLATE = app
 
 
 SOURCES += main.cpp \
     stackcontext.cpp \
-    stackcontext_x86_64.s
+    stackcontext_x86_64.s \
+    deferred.cpp \
+    pendingcallback.cpp
 
 HEADERS += \
-    stackcontext.h
+    stackcontext.h \
+    deferred.h \
+    pendingcallback.h
