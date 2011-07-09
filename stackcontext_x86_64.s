@@ -65,7 +65,7 @@ _StackContext_Yield:
   mov 0x18(%rbx),%rax # rax = rbx->yielded_stack_data_
   add 0x10(%rsp),%rax # rax += stack_size
 
-  mov _StackContext_ResumeYieldFinished,%rcx
+  mov $_StackContext_ResumeYieldFinished,%rcx
   mov %rcx,-0x8(%rax)
   mov %rbx,-0x10(%rax)
 
@@ -106,13 +106,13 @@ _StackContext_ResumeYield:
 
   mov 0x28(%rbx),%rdi # rdi = this->yielded_stack_backup_
   mov 0x8(%rsp),%rsi  # rsi = stack_start
-  mov 0x20(%rdi),%rdx # rdx = this->yielded_stack_size_
+  mov 0x20(%rbx),%rdx # rdx = this->yielded_stack_size_
   call memcpy
 
   # Save the registers and return address from the calling function
   mov (%rsp),%rcx          # rcx = this
-  mov 0x8(%rsp),%rbx       # rbx = stack_start
-  mov %rbx,0x48(%rcx)      # this->resuming_sp_ = stack_start
+  lea 0x18(%rsp),%rbx      # rbx = caller's rsp
+  mov %rbx,0x48(%rcx)      # this->resuming_sp_ = rbx
 
   mov %rbp,0x50(%rcx)      # this->resuming_bp_ = rbp
 
@@ -125,16 +125,40 @@ _StackContext_ResumeYield:
   mov 0x40(%rcx),%r14      # r14 = this->yielded_ret_
 
   # Replace the current stack with the yielded stack
-  mov %rbx,%rdi            # rdi = stack_start
+  mov 0x8(%rsp),%rdi       # rdi = stack_start
   mov 0x18(%rcx),%rsi      # rsi = this->yielded_stack_data_
-  mov 0x20(%rcx),%rdx      # rdx = this->yielded_stack_size_
-  call memcpy
+  mov 0x20(%rcx),%rcx      # rcx = this->yielded_stack_size_
+  shr $3,%rcx              # rcx /= 8
+  rep movsq
 
   # Jump back into the yielded function
-  mov 0x0,%rax
+  mov $0x0,%rax
   mov %r12,%rsp
   mov %r13,%rbp
   jmp *%r14
 
 
 _StackContext_ResumeYieldFinished:
+  # -0x10(%rsp)    this
+  mov -0x10(%rsp),%rax      # rax = this
+
+  # Load targets into registers before destroying the stack
+  mov 0x48(%rax),%r12      # r12 = this->resuming_sp_
+  mov 0x50(%rax),%r13      # r13 = this->resuming_bp_
+  mov 0x58(%rax),%r14      # r14 = this->resuming_ret_
+
+  # rdi = this->event_loop_sp_ - this->yielded_stack_size
+  mov (%rax),%rdi          # rdi = this->event_loop_sp_
+  sub 0x20(%rax),%rdi      # rdi -= this->yielded_stack_size_
+
+  # Replace the stack with the resuming stack
+  mov 0x18(%rax),%rsi      # rsi = this->yielded_stack_data_
+  mov 0x20(%rax),%rcx      # rcx = this->yielded_stack_size_
+  shr $3,%rcx              # rcx /= 8
+  rep movsq
+
+  # Jump back into the resuming function
+  mov $0x0,%rax
+  mov %r12,%rsp
+  mov %r13,%rbp
+  jmp *%r14

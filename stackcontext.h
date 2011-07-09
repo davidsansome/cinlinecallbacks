@@ -8,6 +8,7 @@ public:
   void Yield() asm("_StackContext_Yield");
   void ResumeYield() asm("_StackContext_ResumeYield");
 
+private:
   // Registers to restore when jumping back to the event loop.  sp is also the
   // start of (byte above) the stack data that is saved when yielding.
   void** event_loop_sp_;                    // 0x00

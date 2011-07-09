@@ -12,7 +12,7 @@ TARGET = stacktest
 CONFIG   += console
 CONFIG   -= app_bundle
 CONFIG += debug
-QMAKE_CXXFLAGS += -fomit-frame-pointer
+QMAKE_CXXFLAGS += -O2
 
 TEMPLATE = app
 
